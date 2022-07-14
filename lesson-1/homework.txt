@@ -1,0 +1,45 @@
+Домашнее задание 1.
+Установлена POSTGRESQL  14.4 под  WINDOWS 10 , 
+работаю в командной строке SQL Shell (psql)
+ 
+//создание базы данных market
+CREATE DATABASE market;
+
+// - создание пользователя(роли)  intern с паролем  ‘nickon’
+CREATE USER intern WITH ENCRYPTED PASSWORD  'nickon';
+
+//предоставление привилегий пользователю на базу данных
+postgres=# GRANT ALL PRIVILEGES ON DATABASE market TO intern; 
+
+// подключаемся к базе market
+  \c market
+
+//создадим таблицу users с полями id, name,  age, email,  password,  birth_date, address
+market=# CREATE TABLE users (id SERIAL PRIMARY KEY, name VARCHAR(100), age INTEGER, email VARCHAR(100), password VARCHAR(150), birth_date DATE, address TEXT);
+
+//добавим несколько пользователей
+market=# insert into users VALUES(1,'user1',19,'user1@gmail.com','123','2003-06-27','some address1');
+market=# insert into users VALUES(2,'user2',22,'user2@gmail.com','123','2000-07-24','some address2');
+market=# insert into users VALUES(3,'user2',15,'user3@gmail.com','123','2007-07-27','some address3');
+
+//создание таблицы products с полями id, name,  price, user_id
+market=# CREATE TABLE products (id SERIAL PRIMARY KEY, name VARCHAR(100), price NUMERIC, user_id  INTEGER);
+
+//реализовать связь между таблицами products и users (у продукта есть хазяин)
+market=# ALTER TABLE products ADD CONSTRAINT user_id_fk FOREIGN KEY (user_id) REFERENCES users (id);
+
+//продукт не может существовать без хозяина, при удалении хозяина продукт тоже должен удаляться
+market=# ALTER TABLE products ADD CONSTRAINT user_id_cascade FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
+
+
+//добавить несколько товаров
+market=# INSERT INTO products (name, price, user_id) VALUES ('tovar1', 2.99, 1);
+INSERT 0 1
+market=# INSERT INTO products (name, price, user_id) VALUES ('tovar1', 5.45, 2);
+
+//добавить ограничение пользователей по возрасту (+18). Предварительно удалить всех кто не проходит по этому критерию.
+market=# delete from users where age<18;
+market=# ALTER TABLE users ADD CONSTRAINT age_check CHECK (age >= 18);
+
+//сменить владельца товара с одного пользователя на другого .
+ market=# UPDATE products SET user_id = 1 where id = 2;
