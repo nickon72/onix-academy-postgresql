@@ -1,0 +1,86 @@
+1.	Базу развернул из командной строки, а все выборки делал уже из pgAdmin4, т.к. визуализация в командной строке из-за большого количества данных в таблице не очень.
+
+2.	Выбрать из таблицы member_applications все записи
+
+     SELECT * FROM member_applications LIMIT 10;
+
+3.	Выбрать из таблицы только 10 записей
+    SELECT * FROM member_applications LIMIT 10;
+
+4.	Выбрать из таблицы 10 записей с самым большим возрастом (дата рождения в колонке dob)
+
+    SELECT * FROM member_applications WHERE dob IS NOT NULL ORDER BY dob ASC LIMIT 10;
+
+5.	Найти запись с mbi E3FV7SGMDQJ
+
+    SELECT * FROM member_applications WHERE mbi LIKE '%E3FV7SGMDQJ%';
+
+6.	Выбрать вторую десятку записей с самым большим возрастом (dob)
+
+    SELECT * FROM member_applications WHERE dob IS NOT NULL ORDER BY dob ASC LIMIT 10 OFFSET 10;
+
+7.	Выбрать записи, статус которых - COMPLETED
+
+    SELECT * FROM member_applications WHERE status = 'COMPLETED';
+
+8.	Выбрать title, first_name, phone записей, статус (status) которых  ARCHIVED или REJECTED
+
+    SELECT title,first_name, phone,status FROM member_applications WHERE status IN('ARCHIVED','REJECTED');
+
+9.	Выбрать 20 самых новых (application_date) записей, статус (status) которых не  ARCHIVED, DRAFT или REJECTED
+
+    SELECT * FROM member_applications WHERE status NOT IN('ARCHIVED','DRAFT','REJECTED')
+    ORDER BY application_date DESC  LIMIT 20;
+
+10.	Выбрать 3 докторов (doctor_id), у которых больше всего пациентов (COUNT, GROUP BY)
+
+    SELECT doctor_id, count(doctor_id) as number_of_patients FROM member_applications GROUP BY doctor_id ORDER BY count(doctor_id) DESC LIMIT 3;
+
+11.	Выбрать записи с имейлом (email) в gmail
+
+    SELECT *  FROM member_applications WHERE email LIKE ('%@gmail.com');
+
+12.	Вывести имя (first_name), фамилию (last_name), и mbi всех, кто подал заявку после 2021-04-05 (столбец application_date), и при этом подписал её (поле signed_date)
+
+     SELECT first_name, last_name,application_date, signed_date, mbi FROM member_applications WHERE 
+     application_date > '2021-04-05' AND signed_date IS NOT NULL;
+
+13.	Вывести id, и колонку full_name полученную конкатенацией first_name и last_name через пробел, для всех записей, где physical_state - UT, NM, AZ
+
+     SELECT id, physical_state, CONCAT(first_name,'  ',last_name) AS full_name
+     FROM member_applications WHERE physical_state IN('UT','NM','AZ');
+
+14.	Выбрать адреса (physical_address1), которые находятся в зип кодах (physical_zip) 32766, 55359, 30642, 60158, 54229
+
+     SELECT physical_address1,physical_zip FROM member_applications
+     WHERE physical_zip IN('32766','55359','30642','60158','54229');
+
+15.	Вывести id и first_name тех, у кого есть email, но при этом они не получают уведомлений (колонка receive_notifications). Отсортировать по имени, потом по имейлу.
+
+    SELECT id, first_name,email FROM member_applications
+    WHERE email IS NOT NULL AND email !=''  AND receive_notifications = 'false' 
+    ORDER BY first_name, email;
+
+16.	Вывести все телефоны, которые заканчиваются на 123
+
+    SELECT phone FROM member_applications WHERE phone LIKE '%123';
+
+17.	Вывести все телефоны, в которых есть 333
+
+    SELECT phone FROM member_applications
+    WHERE phone LIKE '%333%';
+
+18.	Вывести имя (first_name), фамилию (last_name), и телефон (phone) мужчин (gender) из Аризоны (AZ), или женщин из Нью-Мексико (NM)
+
+    SELECT first_name, last_name, phone, gender, physical_state 
+    FROM member_applications
+    WHERE (gender='M' AND physical_state='AZ') OR (gender='F' AND physical_state='NM');
+
+19.	Вывести уникальные first_name
+    
+    SELECT DISTINCT first_name FROM member_applications;
+
+20.	Вывести user_id ошибочно созданных записей (удалены (deleted) в течении часа после создания (created))
+
+    SELECT user_id   FROM member_applications
+    WHERE deleted IS NOT NULL and EXTRACT(EPOCH FROM(deleted-created))<=3600;
