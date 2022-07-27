@@ -1,0 +1,75 @@
+
+
+1.	удалить таблицы user_data, user_data_2, user_discounts, discounts
+DROP table discounts, user_discounts, user_data; 
+
+2.	 очистить все таблицы
+             TRUNCATE users, orders, product_categories, products,
+            discounts, user_discounts, user_addresses, user_data;
+
+3.	добавить несколько пользователей
+сначала удалим ошибочный внешний ключ: 
+ALTER TABLE user_addresses DROP CONSTRAINT user_id_fk;
+Затем добавим как нужно:
+ALTER TABLE user_addresses ADD CONSTRAINT user_id_fk FOREIGN KEY (user_id) REFERENCES users (id);
+4.	добавить им минимум по одному адресу для доставки (у пользователя может быть несколько адресов)
+5.	 добавить несколько категорий для товаров
+6.	добавить несколько товаров
+все операции по добавлению сделал в pgadmin4
+7.	связать таблицы orders и products с помощью таблицы order_products (в заказе может быть множество товаров, и каждый товар может быть во многих заказах). В этой же таблице нужно хранить количество единиц товара в заказе.
+Таблицу создал в pgadmin4
+8.	создал несколько заказов в в pgadmin4.
+9.	вывести список всех адресов. В каждом адресе должно быть указано имя пользователя, которому принадлежит адрес.
+
+SELECT user_addresses.address, users.name FROM users
+LEFT  JOIN user_addresses
+ON users.id = user_addresses.user_id
+10.	вывести список всех адресов одного из пользователей. В каждом адресе должно быть указано имя пользователя, которому принадлежит адрес.
+SELECT user_addresses.address, users.name FROM user_addresses
+INNER JOIN users
+ON user_addresses.user_id=users.id AND users.id=4;
+11.	вывести названия всех продуктов с указанием названия категории которой принадлежит продукт.
+SELECT products.name, product_categories.name FROM products
+LEFT JOIN product_categories
+ON product_categories.id = products.category_id;
+12.	 вывести названия всех категорий (даже тех, в которых нет ни одного продукта), и названия продуктов, которые в них находятся.
+SELECT products.name, product_categories.name FROM products
+RIGHT JOIN product_categories
+ON product_categories.id = products.category_id;
+13.	главная страница с категориями: вывести названия всех категорий в которых нет продуктов.
+SELECT product_categories.name FROM products
+RIGHT JOIN product_categories
+ON product_categories.id = products.category_id 
+WHERE products.category_id IS NULL;
+14.	страница одной из категорий товаров: вывести название родителя категории с названием %name%.
+SELECT b.name AS name, a.name AS parent 
+FROM product_categories AS b
+JOIN product_categories AS a
+ON a.id = b.parent_id AND b.name LIKE '%категория1_1%' ;
+
+15.	просмотр страницы товара: вывести название товара, название его категории, и название родительской категории для товара с id %id%. Колонка с категорией должна при этом называться category_name, с родительской категорией - parent_category_name
+SELECT  name FROM products where id::text like '%4%';
+SELECT b.name AS category_name, a.name AS parent_category_name 
+FROM product_categories AS b
+JOIN product_categories AS a
+ON a.id = b.parent_id AND b.parent_id = 6 ;
+
+16.	смотрим статистику заказов: вывести id заказа, и имя пользователя для заказов сделанных после %date%.
+SELECT orders.id, orders.user_id, users.name FROM orders
+JOIN users
+ON orders.user_id = users.id AND orders.order_date > '2022-7-20';
+
+17.	просматриваем сделанный заказ: вывести список записей вида: название товара, цена, количество из заказа с id %id%
+SELECT products.name, products.price, order_products.quantity FROM products
+JOIN order_products
+ON order_products.products_id = products.id 
+AND order_products.order_id::text like '%2%';
+
+18.	 история заказов: вывести список записей вида: имя пользователя, id заказа, дата заказа, тотал - сумма стоимости всех товаров в заказе (нужно учитывать, что в заказе бывает несколько единиц одного товара)
+select order_products.order_id, SUM(order_products.quantity*products.price) 
+from order_products
+join products
+on products.id = order_products.products_id
+group by order_products.order_id;
+
+
